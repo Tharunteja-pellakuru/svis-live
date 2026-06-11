@@ -1,0 +1,7 @@
+node_modules/
+.DS_Store
+error_log
+uploads/
+config.php
+config-old.php
+test-email.php
