@@ -73,6 +73,22 @@ while ($row = $result->fetch_assoc()) {
     .user-name-cell { font-weight: 700; color: var(--blue-dark); display: block; }
     .user-phone-cell { font-size: 0.8rem; color: var(--text-3); }
     .batch-badge { display: inline-flex; padding: 4px 10px; background: var(--amber-bg); color: #d97706; font-size: 0.75rem; font-weight: 700; border-radius: 12px; }
+
+    /* Excel Dropdown */
+    .excel-dropdown-wrap { position: relative; }
+    .btn-excel { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; border: none; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(22,163,74,0.3); transition: all 0.15s; white-space: nowrap; }
+    .btn-excel:hover { background: linear-gradient(135deg, #15803d, #166534); transform: translateY(-1px); }
+    .btn-excel .excel-chevron { transition: transform 0.2s; }
+    .btn-excel.open .excel-chevron { transform: rotate(180deg); }
+    .excel-dropdown { display: none; position: fixed; background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); min-width: 240px; max-height: 320px; overflow-y: auto; z-index: 99999; animation: dropIn 0.18s ease; }
+    .excel-dropdown.show { display: block; }
+    @keyframes dropIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    .excel-dropdown-header { padding: 10px 14px 6px; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); }
+    .excel-option { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 0.82rem; font-weight: 600; color: var(--text); text-decoration: none; transition: background 0.12s; }
+    .excel-option:hover { background: var(--surface-alt); color: var(--blue); }
+    .excel-option .excel-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .excel-option .excel-count { margin-left: auto; font-size: 0.68rem; font-weight: 800; background: var(--surface-alt); padding: 1px 8px; border-radius: 10px; color: var(--text-3); }
+    .excel-option:hover .excel-count { background: rgba(26,86,160,0.1); color: var(--blue); }
   </style>
 
   <div class="panel">
@@ -94,6 +110,36 @@ while ($row = $result->fetch_assoc()) {
         <div class="search-form">
           <input type="text" id="regSearch" class="search-input" placeholder="Search name, event, batch..." autocomplete="off">
           <div class="search-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
+        </div>
+
+        <!-- Excel Download Dropdown -->
+        <?php
+          $totalRegs = count($registrations);
+        ?>
+        <div class="excel-dropdown-wrap">
+          <button id="excelDropdownBtn" class="btn-excel" onclick="toggleExcelDropdown()" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Download Excel
+            <svg class="excel-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="excel-dropdown" id="excelDropdown">
+            <div class="excel-dropdown-header">📊 Export Registrations</div>
+            <a href="download_event_registrations.php" class="excel-option">
+              <span class="excel-dot" style="background:#6366f1;"></span>
+              All Events
+              <span class="excel-count"><?= $totalRegs ?></span>
+            </a>
+            <?php foreach($events_list as $ev):
+              $evCount = 0;
+              foreach($registrations as $r) { if($r['event_id'] == $ev['id']) $evCount++; }
+            ?>
+            <a href="download_event_registrations.php?event_id=<?= $ev['id'] ?>" class="excel-option">
+              <span class="excel-dot" style="background:#36a2eb;"></span>
+              <?= htmlspecialchars($ev['event_name']) ?>
+              <span class="excel-count"><?= $evCount ?></span>
+            </a>
+            <?php endforeach; ?>
+          </div>
         </div>
       </div>
     </div>
@@ -201,5 +247,26 @@ while ($row = $result->fetch_assoc()) {
   if (eventFilter) {
     eventFilter.addEventListener('change', filterTable);
   }
+
+  // ── Excel Dropdown ─────────────────────────────────────────
+  function toggleExcelDropdown() {
+    const btn = document.getElementById('excelDropdownBtn');
+    const dd  = document.getElementById('excelDropdown');
+    const isOpen = dd.classList.contains('show');
+    if (!isOpen) {
+      const rect = btn.getBoundingClientRect();
+      dd.style.top   = (rect.bottom + 6 + window.scrollY) + 'px';
+      dd.style.right = (window.innerWidth - rect.right) + 'px';
+    }
+    dd.classList.toggle('show', !isOpen);
+    btn.classList.toggle('open', !isOpen);
+  }
+  document.addEventListener('click', function(e) {
+    const wrap = document.querySelector('.excel-dropdown-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById('excelDropdown').classList.remove('show');
+      document.getElementById('excelDropdownBtn').classList.remove('open');
+    }
+  });
 </script>
 </body></html>

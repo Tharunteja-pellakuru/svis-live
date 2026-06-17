@@ -426,6 +426,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
     .mini-stat-val { font-size: 1.5rem; font-weight: 900; color: var(--blue-dark); }
     
     @media (max-width: 768px) { .stat-row { grid-template-columns: 1fr; } }
+
+    /* ── Excel Download Dropdown ── */
+    .excel-dropdown-wrap { position: relative; }
+    .btn-excel {
+      display: inline-flex; align-items: center; gap: 7px;
+      height: 34px; padding: 0 14px;
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      color: #fff; border: none; border-radius: 8px;
+      font-size: 0.8rem; font-weight: 700; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(22,163,74,0.3); transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn-excel:hover { background: linear-gradient(135deg, #15803d, #166534); box-shadow: 0 4px 14px rgba(22,163,74,0.4); transform: translateY(-1px); }
+    .btn-excel svg { flex-shrink: 0; }
+    .btn-excel .excel-chevron { transition: transform 0.2s; }
+    .btn-excel.open .excel-chevron { transform: rotate(180deg); }
+
+    .excel-dropdown { display: none; position: fixed; background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); min-width: 230px; z-index: 99999; overflow: hidden; animation: dropIn 0.18s ease; }
+    .excel-dropdown.show { display: block; }
+    @keyframes dropIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    .excel-dropdown-header {
+      padding: 10px 14px 6px;
+      font-size: 0.68rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-3); border-bottom: 1px solid var(--border);
+    }
+    .excel-option {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; font-size: 0.82rem; font-weight: 600;
+      color: var(--text); text-decoration: none; transition: background 0.12s;
+    }
+    .excel-option:hover { background: var(--surface-alt); color: var(--blue); }
+    .excel-option .excel-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .excel-option .excel-count {
+      margin-left: auto; font-size: 0.68rem; font-weight: 800;
+      background: var(--surface-alt); padding: 1px 8px; border-radius: 10px;
+      color: var(--text-3);
+    }
+    .excel-option:hover .excel-count { background: rgba(26,86,160,0.1); color: var(--blue); }
   </style>
 
   <div class="stat-row">
@@ -461,6 +501,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
         <div class="search-form">
           <input type="text" id="liveSearch" class="search-input" placeholder="Search name, email, batch..." value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" autocomplete="off">
           <div class="search-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
+        </div>
+
+        <!-- Excel Download Dropdown -->
+        <div class="excel-dropdown-wrap">
+          <button id="excelDropdownBtn" class="btn-excel" onclick="toggleExcelDropdown()" type="button">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            Download Excel
+            <svg class="excel-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="excel-dropdown" id="excelDropdown">
+            <div class="excel-dropdown-header">📊 Export Users as Excel</div>
+            <a href="download_alumni_excel.php?filter=all" class="excel-option">
+              <span class="excel-dot" style="background:#6366f1;"></span>
+              All Users
+              <span class="excel-count"><?= $totalCount ?></span>
+            </a>
+            <a href="download_alumni_excel.php?filter=approved" class="excel-option">
+              <span class="excel-dot" style="background:#16a34a;"></span>
+              Approved Users
+              <span class="excel-count"><?= $verifiedCount ?></span>
+            </a>
+            <a href="download_alumni_excel.php?filter=rejected" class="excel-option">
+              <span class="excel-dot" style="background:#ef4444;"></span>
+              Rejected Users
+              <span class="excel-count"><?= $rejectedCount ?></span>
+            </a>
+            <a href="download_alumni_excel.php?filter=pending-email" class="excel-option">
+              <span class="excel-dot" style="background:#f59e0b;"></span>
+              Pending Email Users
+              <span class="excel-count"><?= $pendingEmailCount ?></span>
+            </a>
+            <a href="download_alumni_excel.php?filter=pending-approval" class="excel-option">
+              <span class="excel-dot" style="background:#36a2eb;"></span>
+              Pending Approval Users
+              <span class="excel-count"><?= $pendingApprovalCount ?></span>
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -831,6 +914,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_user'])) {
 
   rowCheckboxes.forEach(cb => {
     cb.addEventListener('change', toggleBulkActions);
+  });
+
+  // ── Excel Dropdown ────────────────────────────────────────
+  function toggleExcelDropdown() {
+    const btn = document.getElementById('excelDropdownBtn');
+    const dd  = document.getElementById('excelDropdown');
+    const isOpen = dd.classList.contains('show');
+    if (!isOpen) {
+      const rect = btn.getBoundingClientRect();
+      dd.style.top   = (rect.bottom + 6 + window.scrollY) + 'px';
+      dd.style.right = (window.innerWidth - rect.right) + 'px';
+    }
+    dd.classList.toggle('show', !isOpen);
+    btn.classList.toggle('open', !isOpen);
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(e) {
+    const wrap = document.querySelector('.excel-dropdown-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById('excelDropdown').classList.remove('show');
+      document.getElementById('excelDropdownBtn').classList.remove('open');
+    }
   });
 </script>
 </body></html>
