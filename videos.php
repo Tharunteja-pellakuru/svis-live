@@ -19,32 +19,32 @@ if (session_status() == PHP_SESSION_NONE) {
   <link rel="stylesheet" href="shared.css"/>
   <style>
     .videos-subtitle{text-align:center;color:#6b7280;max-width:540px;margin:0 auto 3rem;font-size:.95rem}
-    .videos-grid { margin-top:1.5rem; display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:2rem; }
+    .videos-grid { margin-top:1.5rem; display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:1.5rem; }
     .video-card { background:#fff; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.04); transition:all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); cursor:pointer; border:1px solid #f1f5f9; display:flex; flex-direction:column; height:100%; }
     .video-card:hover { box-shadow:0 25px 50px rgba(30,58,138,0.12); transform:translateY(-10px); border-color:rgba(30,58,138,0.15); }
     
-    .video-thumb { position:relative; height:220px; overflow:hidden; background:#0f172a; }
+    .video-thumb { position:relative; height:170px; overflow:hidden; background:#0f172a; }
     .video-thumb img { width:100%; height:100%; object-fit:cover; transition:transform 0.6s ease; filter:brightness(0.94); }
     .video-card:hover .video-thumb img { transform:scale(1.1); filter:brightness(1); }
     
     .play-btn-wrap { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(15,23,42,0); transition:background 0.3s; }
     .video-card:hover .play-btn-wrap { background:rgba(15,23,42,0.2); }
     
-    .play-btn { width:60px; height:60px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 25px rgba(0,0,0,0.2); transition:all 0.3s; opacity:0.9; }
+    .play-btn { width:48px; height:48px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(0,0,0,0.2); transition:all 0.3s; opacity:0.9; }
     .video-card:hover .play-btn { transform:scale(1.2); background:var(--blue); opacity:1; }
-    .play-btn i { color:var(--blue); font-size:1.25rem; margin-left:4px; transition:color 0.3s; }
+    .play-btn i { color:var(--blue); font-size:1rem; margin-left:3px; transition:color 0.3s; }
     .video-card:hover .play-btn i { color:#fff }
     
     .video-badge { position:absolute; top:15px; left:15px; background:rgba(255,255,255,0.92); backdrop-filter:blur(4px); color:var(--blue); font-size:0.7rem; padding:0.35rem 0.8rem; border-radius:30px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:10; }
     
-    .video-info { padding:1.75rem; flex:1; display:flex; flex-direction:column; }
-    .video-title { font-size:1.15rem; font-weight:700; color:#1e293b; margin-bottom:0.8rem; line-height:1.45; transition:color 0.3s; display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2; overflow:hidden; }
+    .video-info { padding:1.1rem 1.25rem 1.25rem; flex:1; display:flex; flex-direction:column; }
+    .video-title { font-size:0.97rem; font-weight:700; color:#1e293b; margin-bottom:0.5rem; line-height:1.4; transition:color 0.3s; display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2; overflow:hidden; }
     .video-card:hover .video-title { color:var(--blue); }
     
-    .video-desc { font-size:0.9rem; color:#64748b; line-height:1.65; margin-bottom:1.5rem; display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2; overflow:hidden; flex:1; }
+    .video-desc { font-size:0.82rem; color:#64748b; line-height:1.55; margin-bottom:1rem; display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2; overflow:hidden; flex:1; }
     
-    .video-date { font-size:0.8rem; color:#94a3b8; display:flex; align-items:center; gap:8px; padding-top:1.25rem; border-top:1px solid #f1f5f9; margin-top:auto; }
-    .video-date i { font-size: 0.9rem; color: var(--blue); opacity: 0.6; }
+    .video-date { font-size:0.75rem; color:#94a3b8; display:flex; align-items:center; gap:6px; padding-top:0.9rem; border-top:1px solid #f1f5f9; margin-top:auto; }
+    .video-date i { font-size: 0.8rem; color: var(--blue); opacity: 0.6; }
 
     /* Pagination */
     .pagination-wrap { display: flex; justify-content: center; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin: 3rem 0; padding: 0 1rem; }
@@ -55,18 +55,20 @@ if (session_status() == PHP_SESSION_NONE) {
     .page-btn.prev-next { padding: 0 1.5rem; }
 
     /* Lightbox */
-    .vm-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.92); z-index:70; align-items:center; justify-content:center; padding:1.5rem; }
+    .vm-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.92); z-index:70; align-items:center; justify-content:center; padding:1.5rem; overflow-y:auto; }
     .vm-overlay.open { display:flex; animation: fadeIn 0.3s ease; }
-    .vm-inner { width:100%; max-width:960px; }
-    .vm-topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+    .vm-inner { width:100%; max-width:960px; display:flex; flex-direction:column; max-height:calc(100dvh - 3rem); }
+    .vm-topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-shrink:0; }
     .vm-topbar h3 { color:#fff; font-size:1.15rem; font-weight:600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 1rem; }
     .vm-ctrls { display:flex; gap:0.75rem; align-items:center; flex-shrink: 0; }
     .vm-ctrl { background:rgba(255,255,255,0.1); border:none; color:#fff; cursor:pointer; transition:all 0.2s; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     .vm-ctrl:hover { background:rgba(255,255,255,0.25); color:var(--gold); }
     .vm-ctrl svg { width:22px; height:22px; }
-    .vm-frame-wrap { background:#000; border-radius:12px; overflow:hidden; aspect-ratio:16/9; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+    .vm-frame-wrap { background:#000; border-radius:12px; overflow:hidden; aspect-ratio:16/9; box-shadow:0 20px 60px rgba(0,0,0,.6); flex-shrink:0; }
+    /* Shorts: cap width so 9:16 height fits within screen (subtract ~130px for topbar + padding + hint) */
+    .vm-frame-wrap.shorts-mode { aspect-ratio:9/16; max-width:min(360px, calc((100dvh - 130px) * 9 / 16)); width:100%; margin:0 auto; }
     .vm-frame-wrap iframe { width:100%; height:100%; border:0; }
-    .vm-hint { text-align:center; color:#9ca3af; font-size:.8rem; margin-top:1rem; }
+    .vm-hint { text-align:center; color:#9ca3af; font-size:.8rem; margin-top:1rem; flex-shrink:0; }
 
     /* Search Bar */
     .video-search-wrap { margin-bottom: 3rem; display: flex; justify-content: center; padding: 0 1rem; }
@@ -84,17 +86,17 @@ if (session_status() == PHP_SESSION_NONE) {
     }
 
     @media (max-width: 768px) {
-      .video-thumb { height: 200px; }
-      .video-info { padding: 1.25rem; }
-      .video-title { font-size: 1.05rem; }
+      .video-thumb { height: 160px; }
+      .video-info { padding: 1rem 1.1rem 1.1rem; }
+      .video-title { font-size: 0.92rem; }
       .vm-inner { max-width: 100%; }
       .vm-topbar h3 { font-size: 1rem; }
       .vm-ctrl { width: 36px; height: 36px; }
     }
 
     @media (max-width: 600px) {
-      .videos-grid { grid-template-columns: 1fr; gap: 1.25rem; }
-      .video-thumb { height: 180px; }
+      .videos-grid { grid-template-columns: 1fr; gap: 1rem; }
+      .video-thumb { height: 150px; }
       .page-btn.prev-next { padding: 0 1rem; font-size: 0.8rem; }
       .video-search-inner input { font-size: 0.9rem; padding-left: 3rem; }
       .video-search-inner i { left: 1.1rem; font-size: 1rem; }
@@ -195,7 +197,7 @@ if (session_status() == PHP_SESSION_NONE) {
             $safe_url = htmlspecialchars($video_url);
       ?>
 
-      <div class="video-card" onclick="openVm('<?= $safe_url ?>', '<?= $title ?>')" data-title="<?= strtolower($title) ?>" data-desc="<?= strtolower(htmlspecialchars($row['video_description'] ?? '')) ?>">
+      <div class="video-card" onclick="openVm('<?= $safe_url ?>', '<?= $title ?>')" data-title="<?= strtolower($title) ?>" data-desc="<?= strtolower(htmlspecialchars($row['description'] ?? '')) ?>">
         <div class="video-thumb">
           <img src="<?= $thumb ?>" alt="<?= $title ?>" onerror="this.style.display='none'"/>
           <div class="play-btn-wrap">
@@ -205,8 +207,8 @@ if (session_status() == PHP_SESSION_NONE) {
         </div>
         <div class="video-info">
           <h3 class="video-title"><?= $title ?></h3>
-          <?php if(!empty($row['video_description'])): ?>
-            <p class="video-desc"><?= htmlspecialchars(mb_strimwidth($row['video_description'], 0, 150, "...")) ?></p>
+          <?php if(!empty($row['description'])): ?>
+            <p class="video-desc"><?= htmlspecialchars(mb_strimwidth($row['description'], 0, 150, "...")) ?></p>
           <?php endif; ?>
           <p class="video-date"><i class="far fa-calendar-alt"></i> <?= $date ?></p>
         </div>
@@ -349,12 +351,24 @@ if (session_status() == PHP_SESSION_NONE) {
   /* Video lightbox */
   function openVm(videoUrl, title) {
     let embedUrl = videoUrl;
+    const frameWrap = document.getElementById('vm-container');
+    let isShorts = false;
     if (videoUrl.includes('youtube.com/watch')) {
       const videoId = videoUrl.split('v=')[1]?.split('&')[0];
       embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    } else if (videoUrl.includes('youtube.com/shorts/')) {
+      const videoId = videoUrl.split('/shorts/')[1]?.split('?')[0];
+      embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+      isShorts = true;
     } else if (videoUrl.includes('youtu.be/')) {
       const videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0];
       embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    }
+    // Switch aspect ratio for Shorts (portrait) vs normal (landscape)
+    if (isShorts) {
+      frameWrap.classList.add('shorts-mode');
+    } else {
+      frameWrap.classList.remove('shorts-mode');
     }
     document.getElementById('vm-iframe').src = embedUrl;
     document.getElementById('vm-title').textContent = title;
@@ -363,6 +377,7 @@ if (session_status() == PHP_SESSION_NONE) {
   }
   function closeVm() {
     document.getElementById('vm-iframe').src = '';
+    document.getElementById('vm-container').classList.remove('shorts-mode');
     if (document.fullscreenElement) document.exitFullscreen();
     document.getElementById('vm-overlay').classList.remove('open');
     document.body.style.overflow = '';
