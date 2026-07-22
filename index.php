@@ -588,6 +588,8 @@ if ($countries_res) {
     .vm-ctrl:hover { background:rgba(255,255,255,0.25); color:#fbbf24; }
     .vm-ctrl svg { width:22px; height:22px; }
     .vm-frame-wrap { background:#000; border-radius:12px; overflow:hidden; aspect-ratio:16/9; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+    /* Shorts: cap width so 9:16 height fits within screen (subtract ~130px for topbar + padding) */
+    .vm-frame-wrap.shorts-mode { aspect-ratio:9/16; max-width:min(360px, calc((100dvh - 130px) * 9 / 16)); width:100%; margin:0 auto; }
     .vm-frame-wrap iframe { width:100%; height:100%; border:0; }
     .vm-hint { text-align:center; color:#9ca3af; font-size:.8rem; margin-top:1rem; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -995,7 +997,7 @@ if ($countries_res) {
             $date     = date("M d, Y", strtotime($row['created_at']));
             $safe_url = htmlspecialchars($video_url);
       ?>
-      <div class="video-card" onclick="openVm('<?= $safe_url ?>', '<?= $title ?>')">
+      <div class="video-card js-video-card" data-url="<?= htmlspecialchars($video_url, ENT_QUOTES) ?>" data-vtitle="<?= htmlspecialchars($row['title'], ENT_QUOTES) ?>">
         <div class="video-thumb">
           <img src="<?= $thumb ?>" alt="<?= $title ?>" onerror="this.style.display='none'"/>
           <div class="play-btn-wrap">
@@ -1222,12 +1224,24 @@ if ($countries_res) {
   /* Video lightbox */
   function openVm(videoUrl, title) {
     let embedUrl = videoUrl;
+    const frameWrap = document.getElementById('vm-container');
+    let isShorts = false;
     if (videoUrl.includes('youtube.com/watch')) {
       const videoId = videoUrl.split('v=')[1]?.split('&')[0];
       embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    } else if (videoUrl.includes('youtube.com/shorts/')) {
+      const videoId = videoUrl.split('/shorts/')[1]?.split('?')[0];
+      embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+      isShorts = true;
     } else if (videoUrl.includes('youtu.be/')) {
       const videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0];
       embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    }
+    // Switch aspect ratio for Shorts (portrait) vs normal (landscape)
+    if (isShorts) {
+      frameWrap.classList.add('shorts-mode');
+    } else {
+      frameWrap.classList.remove('shorts-mode');
     }
     document.getElementById('vm-iframe').src = embedUrl;
     document.getElementById('vm-title').textContent = title;
@@ -1236,6 +1250,7 @@ if ($countries_res) {
   }
   function closeVm() {
     document.getElementById('vm-iframe').src = '';
+    document.getElementById('vm-container').classList.remove('shorts-mode');
     if (document.fullscreenElement) document.exitFullscreen();
     document.getElementById('vm-overlay').classList.remove('open');
     document.body.style.overflow = '';
@@ -1287,6 +1302,12 @@ if ($countries_res) {
     initCustomSelects();
     handleLoginAJAX('login-form');
     handleRegisterAJAX('register-form');
+
+    /* Bind video card clicks (data attributes are parser-safe, so titles/URLs
+       containing apostrophes or quotes can never break the handler) */
+    document.querySelectorAll('.js-video-card').forEach(card => {
+      card.addEventListener('click', () => openVm(card.dataset.url, card.dataset.vtitle));
+    });
   });
   
   function askLogin() {

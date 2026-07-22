@@ -197,7 +197,7 @@ if (session_status() == PHP_SESSION_NONE) {
             $safe_url = htmlspecialchars($video_url);
       ?>
 
-      <div class="video-card" onclick="openVm('<?= $safe_url ?>', '<?= $title ?>')" data-title="<?= strtolower($title) ?>" data-desc="<?= strtolower(htmlspecialchars($row['description'] ?? '')) ?>">
+      <div class="video-card js-video-card" data-url="<?= htmlspecialchars($video_url, ENT_QUOTES) ?>" data-vtitle="<?= htmlspecialchars($row['title'], ENT_QUOTES) ?>" data-title="<?= strtolower($title) ?>" data-desc="<?= strtolower(htmlspecialchars($row['description'] ?? '')) ?>">
         <div class="video-thumb">
           <img src="<?= $thumb ?>" alt="<?= $title ?>" onerror="this.style.display='none'"/>
           <div class="play-btn-wrap">
@@ -445,6 +445,12 @@ if (session_status() == PHP_SESSION_NONE) {
 
   document.addEventListener('DOMContentLoaded', () => {
     initCustomSelects();
+
+    /* Bind video card clicks (data attributes are parser-safe, so titles/URLs
+       containing apostrophes or quotes can never break the handler) */
+    document.querySelectorAll('.js-video-card').forEach(card => {
+      card.addEventListener('click', () => openVm(card.dataset.url, card.dataset.vtitle));
+    });
 
     /* Initial Filter/Pagination call */
     filterVideos();
